@@ -3,6 +3,7 @@ const wordEl = document.getElementById("word");
 const speakBtn = document.getElementById("speakBtn");
 const speakSlowBtn = document.getElementById("speakSlowBtn");
 const revealBtn = document.getElementById("revealBtn");
+const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
 const voiceSelect = document.getElementById("voiceSelect");
 
@@ -144,6 +145,20 @@ function nextWord() {
   startWord();
 }
 
+function prevWord() {
+  if (!state.words.length) {
+    return;
+  }
+  if (state.showingList) {
+    state.showingList = false;
+    hideVocabList();
+  }
+  if (state.index > 0) {
+    state.index -= 1;
+  }
+  startWord();
+}
+
 function revealWord() {
   state.revealed = true;
   setWord(currentWord(), false);
@@ -152,6 +167,7 @@ function revealWord() {
 function initControls(enabled) {
   speakBtn.disabled = !enabled;
   revealBtn.disabled = !enabled;
+  prevBtn.disabled = !enabled;
   nextBtn.disabled = !enabled;
 }
 
@@ -175,6 +191,10 @@ revealBtn.addEventListener("click", () => {
 
 nextBtn.addEventListener("click", () => {
   nextWord();
+});
+
+prevBtn.addEventListener("click", () => {
+  prevWord();
 });
 
 speechSynthesis.addEventListener("voiceschanged", () => {
