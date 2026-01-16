@@ -6,6 +6,8 @@ const revealBtn = document.getElementById("revealBtn");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
 const voiceSelect = document.getElementById("voiceSelect");
+const vocabSection = document.getElementById("vocabSection");
+const vocabList = document.getElementById("vocabList");
 
 const state = {
   words: [],
@@ -14,6 +16,7 @@ const state = {
   lastSpoken: "",
   voice: null,
   voiceId: "",
+  showingList: false,
 };
 
 function shuffle(array) {
@@ -31,6 +34,30 @@ function setStatus(text) {
 function setWord(text, hidden = true) {
   wordEl.textContent = text;
   wordEl.classList.toggle("hidden", hidden);
+}
+
+function renderVocabList() {
+  if (!(vocabList instanceof HTMLOListElement)) {
+    return;
+  }
+  vocabList.innerHTML = "";
+  state.words.forEach((word) => {
+    const item = document.createElement("li");
+    item.textContent = word;
+    vocabList.appendChild(item);
+  });
+}
+
+function hideVocabList() {
+  if (vocabSection) {
+    vocabSection.classList.add("is-hidden");
+  }
+}
+
+function showVocabList() {
+  if (vocabSection) {
+    vocabSection.classList.remove("is-hidden");
+  }
 }
 
 function currentWord() {
@@ -123,23 +150,38 @@ function speakWord(word, rate = 0.45) {
   speechSynthesis.speak(utterance);
 }
 
-function startWord(placeholder = "Écoutez...") {
+function startWord(placeholder = "Écoutez...", keepListVisible = false, speak = true) {
+  if (state.showingList && !keepListVisible) {
+    state.showingList = false;
+    hideVocabList();
+  }
   state.revealed = false;
   setWord(placeholder, true);
   updateProgress();
-  speakWord(currentWord());
+  if (speak) {
+    speakWord(currentWord());
+  }
 }
 
 function nextWord() {
   if (!state.words.length) {
     return;
   }
-  state.index += 1;
-  if (state.index >= state.words.length) {
+  if (state.showingList) {
+    state.showingList = false;
+    hideVocabList();
     shuffle(state.words);
+    renderVocabList();
     state.index = -1;
     setStatus("Restarting with a new shuffle.");
-    startWord("🎉", false);
+  }
+  state.index += 1;
+  if (state.index >= state.words.length) {
+    // state.index = state.words.length - 1;
+    state.showingList = true;
+    showVocabList();
+    startWord("🎉", true, false);
+    setStatus("Liste terminée. Cliquez 'Mot suivant' pour recommencer.");
     return;
   }
   startWord();
@@ -219,6 +261,9 @@ async function loadWords() {
 
     state.words = shuffle(words.slice());
     state.index = 0;
+    state.showingList = false;
+    hideVocabList();
+    renderVocabList();
     pickVoice();
     initControls(true);
     startWord();
